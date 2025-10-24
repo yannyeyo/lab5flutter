@@ -22,17 +22,19 @@ class _ShoppingAppState extends State<ShoppingApp> {
   bool _isAdding = false;
 
   // Добавление новой позиции
-  void _addItem(String title, String? note) {
+  void _addItem(String title, String? note, String category) {
     setState(() {
       final newItem = Item(
         title: title,
         note: note,
+        category: category,            // сохраняем выбранный тип
         createdAt: DateTime.now(),
       );
-      _items.add(newItem);
-      _isAdding = false; // возвращаемся на экран списка
+      _items.insert(0, newItem);
+      _isAdding = false;
     });
   }
+
 
   // Переключение состояния "куплено"
   // 🟢 обновлённая логика: купленные — вниз, некупленные — вверх
@@ -72,7 +74,7 @@ class _ShoppingAppState extends State<ShoppingApp> {
       theme: ThemeData(primarySwatch: Colors.teal),
       home: _isAdding
           ? AddFormScreen(
-        onSave: _addItem,
+        onSave: _addItem, // теперь (title, note, category)
         onCancel: () => setState(() => _isAdding = false),
       )
           : ListScreen(

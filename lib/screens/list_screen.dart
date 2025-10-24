@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/item.dart';
 import '../models/items_list.dart';
+import 'gallery_screen.dart'; // импорт нового экрана
 
 class ListScreen extends StatelessWidget {
   final List<Item> items;
@@ -22,6 +23,16 @@ class ListScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Список покупок'),
         actions: [
+          // кнопка перехода на экран галереи
+          IconButton(
+            icon: const Icon(Icons.image),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GalleryScreen()),
+              );
+            },
+          ),
           IconButton(
             onPressed: onAddPressed,
             icon: const Icon(Icons.add_shopping_cart),

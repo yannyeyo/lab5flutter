@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/item.dart';
+import '../models/category_icons.dart'; // categoryIcon()
 
 class ItemRow extends StatelessWidget {
   final Item item;
@@ -14,6 +16,17 @@ class ItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
+      leading: CachedNetworkImage(
+        imageUrl: categoryIcon(item.category),
+        width: 32,
+        height: 32,
+        fit: BoxFit.contain,
+        placeholder: (c, u) => const SizedBox(
+          width: 32, height: 32,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        errorWidget: (c, u, e) => const Icon(Icons.error),
+      ),
       title: Text(
         item.title,
         style: TextStyle(
@@ -21,9 +34,9 @@ class ItemRow extends StatelessWidget {
           color: item.isBought ? Colors.grey : Colors.black,
         ),
       ),
-      subtitle: item.note != null && item.note!.isNotEmpty
-          ? Text(item.note!)
-          : null,
+      subtitle: Text(
+        '${item.category}${item.note != null && item.note!.isNotEmpty ? " — ${item.note}" : ""}',
+      ),
       trailing: Checkbox(
         value: item.isBought,
         onChanged: (_) => onToggle(),
