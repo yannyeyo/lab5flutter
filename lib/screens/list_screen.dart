@@ -1,55 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/item.dart';
 import '../models/items_list.dart';
-import 'gallery_screen.dart'; // импорт нового экрана
+import '../app_state.dart';
+import 'gallery_screen.dart';
+import 'add_form_screen.dart';
 
 class ListScreen extends StatelessWidget {
-  final List<Item> items;
-  final VoidCallback onAddPressed;
-  final Function(String) onToggle;
-  final Function(String) onDelete;
+  final bool routerMode;
+  const ListScreen({super.key, this.routerMode = false});
 
-  const ListScreen({
-    super.key,
-    required this.items,
-    required this.onAddPressed,
-    required this.onToggle,
-    required this.onDelete,
-  });
+  // конструктор, чтобы понимать что экран открыт по маршрутам
+  const ListScreen.routerMode({super.key}) : routerMode = true;
 
   @override
   Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final items = app.items;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Список покупок'),
         actions: [
-          // кнопка перехода на экран галереи
+          // Галерея (маршрутизированная вертикальная)
           IconButton(
-            icon: const Icon(Icons.image),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GalleryScreen()),
-              );
-            },
+            icon: const Icon(Icons.photo_library_outlined),
+            onPressed: () => context.push('/gallery'),
           ),
+          // Статистика (маршрутизированная вертикальная)
           IconButton(
-            onPressed: onAddPressed,
-            icon: const Icon(Icons.add_shopping_cart),
+            icon: const Icon(Icons.insights_outlined),
+            onPressed: () => context.push('/stats'),
+          ),
+        ],
+      ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Страничная вертикальная навигация: push на форму
+          FloatingActionButton.extended(
+            heroTag: 'fab1',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AddFormScreen()),
+            ),
+            label: const Text('Добавить (push)'),
+            icon: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 8),
+          // Маршрутизированная вертикальная навигация: push на /add
+          FloatingActionButton.extended(
+            heroTag: 'fab2',
+            onPressed: () => context.push('/add'),
+            label: const Text('Добавить (route)'),
+            icon: const Icon(Icons.add_box_outlined),
           ),
         ],
       ),
       body: items.isEmpty
-          ? const Center(
-        child: Text(
-          'Список пуст.\nДобавьте покупки через “+”',
-          textAlign: TextAlign.center,
-        ),
-      )
+          ? const Center(child: Text('Список пуст.'))
           : ItemsList(
         items: items,
-        onToggle: onToggle,
-        onDelete: onDelete,
+        onToggle: app.toggle,
+        onDelete: app.deleteById,
       ),
     );
   }

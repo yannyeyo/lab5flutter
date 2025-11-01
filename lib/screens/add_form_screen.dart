@@ -1,16 +1,21 @@
+// lib/screens/add_form_screen.dart
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../models/category_icons.dart';
+import 'package:go_router/go_router.dart';
+import '../models/item.dart';
+import '../app_state.dart';
+import 'list_screen.dart'; // ← чтобы заменить экран на список при pushReplacement
 
 class AddFormScreen extends StatefulWidget {
-  final Function(String, String?, String) onSave;
-  final VoidCallback onCancel;
+  /// Совместимость со старой реализацией (если форма вызывалась с колбэками)
+  final void Function(String title, String? note, String category)? onSaveLegacy;
+  final VoidCallback? onCancelLegacy;
 
-  const AddFormScreen({
-    super.key,
-    required this.onSave,
-    required this.onCancel,
-  });
+  const AddFormScreen({super.key, this.onSaveLegacy, this.onCancelLegacy});
+
+  /// Для открытия через маршруты
+  const AddFormScreen.routerMode({super.key})
+      : onSaveLegacy = null,
+        onCancelLegacy = null;
 
   @override
   State<AddFormScreen> createState() => _AddFormScreenState();
@@ -18,125 +23,104 @@ class AddFormScreen extends StatefulWidget {
 
 class _AddFormScreenState extends State<AddFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _noteController = TextEditingController();
-  String? _selectedCategory;
+  String _title = '';
+  String? _note;
+  String _category = 'Общее';
 
-  void _submit() {
-    if (_formKey.currentState!.validate() && _selectedCategory != null) {
-      widget.onSave(
-        _titleController.text,
-        _noteController.text,
-        _selectedCategory!,
-      );
-    } else if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пожалуйста, выберите тип товара')),
-      );
-    }
+  void _saveToState() {
+    final app = AppScope.of(context);
+    app.addItem(
+      Item(
+        title: _title,
+        note: _note,
+        createdAt: DateTime.now(), // обязателен в твоей модели
+        category: _category,
+        isBought: false,
+      ),
+    );
+  }
+
+  void _onBack() {
+    widget.onCancelLegacy?.call();
+    Navigator.pop(context); // вертикальная назад
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Добавить покупку')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Название товара'),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Введите название' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                    labelText: 'Комментарий (необязательно)'),
-              ),
-              const SizedBox(height: 20),
+      appBar: AppBar(
+        title: const Text('Добавить покупку'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _onBack,
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Название'),
+              textInputAction: TextInputAction.next,
+              onSaved: (v) => _title = v!.trim(),
+              validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Введите название' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Примечание'),
+              textInputAction: TextInputAction.next,
+              onSaved: (v) => _note = v?.trim(),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: _category,
+              decoration: const InputDecoration(labelText: 'Категория'),
+              onSaved: (v) {
+                final t = (v ?? '').trim();
+                _category = t.isEmpty ? 'Общее' : t;
+              },
+            ),
+            const SizedBox(height: 24),
 
-              Text(
-                'Выберите тип товара',
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
+            // 1) Сохранить: страничная горизонтальная (replace)
+            FilledButton.tonal(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
 
-              // Сетка категорий
-              GridView.count(
-                crossAxisCount: 5,
-                childAspectRatio: 1,
-                shrinkWrap: true,
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-                physics: const NeverScrollableScrollPhysics(),
-                children: kCategories.map((cat) {
-                  final isSelected = _selectedCategory == cat;
-                  return InkWell(
-                    onTap: () => setState(() => _selectedCategory = cat),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : Colors.grey.shade300,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        color: isSelected
-                            ? theme.colorScheme.primary.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.05),
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CachedNetworkImage(
-                            imageUrl: categoryIcon(cat),
-                            height: 46,
-                            width: 46,
-                            fit: BoxFit.contain,
-                            placeholder: (c, u) => const SizedBox(
-                              height: 46,
-                              width: 46,
-                              child: Center(
-                                  child: CircularProgressIndicator(strokeWidth: 2)),
-                            ),
-                            errorWidget: (c, u, e) => const Icon(Icons.error),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            cat,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodySmall!.copyWith(fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
+                  if (widget.onSaveLegacy != null) {
+                    widget.onSaveLegacy!(_title, _note, _category);
+                  } else {
+                    _saveToState();
+                  }
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const ListScreen()),
                   );
-                }).toList(),
-              ),
+                }
+              },
+              child: const Text('Сохранить (replace)'),
+            ),
+            const SizedBox(height: 8),
 
+            // 2) Сохранить: маршрутизированная горизонтальная (go)
+            FilledButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _formKey.currentState!.save();
 
-
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Text('Сохранить'),
-              ),
-              TextButton(
-                onPressed: widget.onCancel,
-                child: const Text('Отмена'),
-              ),
-            ],
-          ),
+                  if (widget.onSaveLegacy != null) {
+                    widget.onSaveLegacy!(_title, _note, _category);
+                  } else {
+                    _saveToState();
+                  }
+                  context.go('/');
+                }
+              },
+              child: const Text('Сохранить (go)'),
+            ),
+          ],
         ),
       ),
     );

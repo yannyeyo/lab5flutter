@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../models/item.dart';
+import 'item.dart';
 import 'item_row.dart';
 
 class ItemsList extends StatelessWidget {
   final List<Item> items;
-  final Function(String) onToggle;
-  final Function(String) onDelete;
+  final void Function(String id) onToggle;
+  final void Function(String id) onDelete;
 
   const ItemsList({
     super.key,
@@ -28,6 +28,7 @@ class ItemsList extends StatelessWidget {
           child: ItemRow(
             item: item,
             onToggle: () => onToggle(item.id),
+            onDelete: () => onDelete(item.id), // ← добавлено
           ),
         );
       },

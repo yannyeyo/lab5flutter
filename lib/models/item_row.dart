@@ -1,45 +1,69 @@
+// lib/models/item_row.dart
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../models/item.dart';
-import '../models/category_icons.dart'; // categoryIcon()
+import 'package:go_router/go_router.dart';
+
+import 'item.dart';
+import 'category_icons.dart'; // тут лежат kCategories, kCategoryIconUrl и categoryIcon()
 
 class ItemRow extends StatelessWidget {
   final Item item;
   final VoidCallback onToggle;
+  final VoidCallback onDelete;
 
   const ItemRow({
     super.key,
     required this.item,
     required this.onToggle,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CachedNetworkImage(
-        imageUrl: categoryIcon(item.category),
-        width: 32,
-        height: 32,
-        fit: BoxFit.contain,
-        placeholder: (c, u) => const SizedBox(
-          width: 32, height: 32,
-          child: CircularProgressIndicator(strokeWidth: 2),
+      // СЛЕВА — КАРТИНКА КАТЕГОРИИ ПО URL
+      leading: CircleAvatar(
+        backgroundColor: Colors.transparent,
+        child: ClipOval(
+          child: Image.network(
+            categoryIcon(item.category),   // ← берём URL по категории
+            width: 32,
+            height: 32,
+            fit: BoxFit.contain,
+            // если картинка не загрузилась — показываем стандартную иконку
+            errorBuilder: (_, __, ___) =>
+            const Icon(Icons.shopping_basket_outlined),
+          ),
         ),
-        errorWidget: (c, u, e) => const Icon(Icons.error),
       ),
+
       title: Text(
         item.title,
         style: TextStyle(
           decoration: item.isBought ? TextDecoration.lineThrough : null,
-          color: item.isBought ? Colors.grey : Colors.black,
         ),
       ),
-      subtitle: Text(
-        '${item.category}${item.note != null && item.note!.isNotEmpty ? " — ${item.note}" : ""}',
-      ),
-      trailing: Checkbox(
-        value: item.isBought,
-        onChanged: (_) => onToggle(),
+      subtitle: (item.note != null && item.note!.trim().isNotEmpty)
+          ? Text(item.note!)
+          : null,
+
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Checkbox(
+            value: item.isBought,
+            onChanged: (_) => onToggle(),
+          ),
+          IconButton(
+            tooltip: 'Детали',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => context.push('/details/${item.id}'),
+          ),
+          IconButton(
+            tooltip: 'Удалить',
+            icon: const Icon(Icons.delete_outline),
+            onPressed: onDelete,
+          ),
+        ],
       ),
     );
   }
