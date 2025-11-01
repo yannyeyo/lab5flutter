@@ -5,7 +5,7 @@ import 'screens/list_screen.dart';
 import 'screens/add_form_screen.dart';
 import 'screens/gallery_screen.dart';
 import 'screens/stats_screen.dart';
-import 'screens/item_details_screen.dart'; // ← добавить
+import 'screens/item_details_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -27,7 +27,7 @@ final appRouter = GoRouter(
           builder: (ctx, st) => const StatsScreen(),
         ),
         GoRoute(
-          path: 'details/:id',                    // ← НОВОЕ
+          path: 'details/:id',
           builder: (ctx, st) =>
               ItemDetailsScreen(id: st.pathParameters['id']!),
         ),

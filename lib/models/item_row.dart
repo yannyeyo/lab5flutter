@@ -20,12 +20,11 @@ class ItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      // СЛЕВА — КАРТИНКА КАТЕГОРИИ ПО URL
       leading: CircleAvatar(
         backgroundColor: Colors.transparent,
         child: ClipOval(
           child: Image.network(
-            categoryIcon(item.category),   // ← берём URL по категории
+            categoryIcon(item.category),
             width: 32,
             height: 32,
             fit: BoxFit.contain,

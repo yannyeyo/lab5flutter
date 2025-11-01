@@ -28,7 +28,7 @@ class ItemsList extends StatelessWidget {
           child: ItemRow(
             item: item,
             onToggle: () => onToggle(item.id),
-            onDelete: () => onDelete(item.id), // ← добавлено
+            onDelete: () => onDelete(item.id),
           ),
         );
       },
