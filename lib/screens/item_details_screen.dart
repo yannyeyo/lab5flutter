@@ -1,5 +1,6 @@
 // lib/screens/item_details_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../app_state.dart';
 
 class ItemDetailsScreen extends StatelessWidget {
@@ -9,12 +10,16 @@ class ItemDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of(context);
-
-    // Защита: если элемент с таким id не найден — показываем экран с сообщением
     final idx = app.items.indexWhere((e) => e.id == id);
     if (idx == -1) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Детали')),
+        appBar: AppBar(
+          title: const Text('Детали'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -22,7 +27,7 @@ class ItemDetailsScreen extends StatelessWidget {
               const Text('Элемент не найден'),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.pop(),
                 child: const Text('Назад'),
               ),
             ],
@@ -30,12 +35,14 @@ class ItemDetailsScreen extends StatelessWidget {
         ),
       );
     }
-
     final item = app.items[idx];
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Детали'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -70,7 +77,7 @@ class ItemDetailsScreen extends StatelessWidget {
           FilledButton.tonalIcon(
             onPressed: () {
               app.deleteById(item.id);
-              Navigator.pop(context);
+              context.pop();
             },
             icon: const Icon(Icons.delete_outline),
             label: const Text('Удалить'),

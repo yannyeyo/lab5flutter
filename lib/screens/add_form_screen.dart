@@ -1,21 +1,13 @@
-// lib/screens/add_form_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/item.dart';
-import '../app_state.dart';
-import 'list_screen.dart'; // ← чтобы заменить экран на список при pushReplacement
+import '../navigation/routes.dart';
+import '../di/locator.dart';
+import '../services/item_service.dart';
 
 class AddFormScreen extends StatefulWidget {
-  /// Совместимость со старой реализацией (если форма вызывалась с колбэками)
-  final void Function(String title, String? note, String category)? onSaveLegacy;
-  final VoidCallback? onCancelLegacy;
-
-  const AddFormScreen({super.key, this.onSaveLegacy, this.onCancelLegacy});
-
-  /// Для открытия через маршруты
-  const AddFormScreen.routerMode({super.key})
-      : onSaveLegacy = null,
-        onCancelLegacy = null;
+  const AddFormScreen({super.key});
+  const AddFormScreen.routerMode({super.key});
 
   @override
   State<AddFormScreen> createState() => _AddFormScreenState();
@@ -27,24 +19,6 @@ class _AddFormScreenState extends State<AddFormScreen> {
   String? _note;
   String _category = 'Общее';
 
-  void _saveToState() {
-    final app = AppScope.of(context);
-    app.addItem(
-      Item(
-        title: _title,
-        note: _note,
-        createdAt: DateTime.now(), // обязателен в твоей модели
-        category: _category,
-        isBought: false,
-      ),
-    );
-  }
-
-  void _onBack() {
-    widget.onCancelLegacy?.call();
-    Navigator.pop(context); // вертикальная назад
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,7 +26,7 @@ class _AddFormScreenState extends State<AddFormScreen> {
         title: const Text('Добавить покупку'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _onBack,
+          onPressed: () => context.pop(),
         ),
       ),
       body: Form(
@@ -84,41 +58,24 @@ class _AddFormScreenState extends State<AddFormScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 1) Сохранить: страничная горизонтальная (replace)
-            FilledButton.tonal(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-
-                  if (widget.onSaveLegacy != null) {
-                    widget.onSaveLegacy!(_title, _note, _category);
-                  } else {
-                    _saveToState();
-                  }
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const ListScreen()),
-                  );
-                }
-              },
-              child: const Text('Сохранить (replace)'),
-            ),
-            const SizedBox(height: 8),
-
-            // 2) Сохранить: маршрутизированная горизонтальная (go)
             FilledButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   _formKey.currentState!.save();
 
-                  if (widget.onSaveLegacy != null) {
-                    widget.onSaveLegacy!(_title, _note, _category);
-                  } else {
-                    _saveToState();
-                  }
-                  context.go('/');
+                  final item = Item(
+                    title: _title,
+                    note: _note,
+                    createdAt: DateTime.now(),
+                    category: _category,
+                    isBought: false,
+                  );
+
+                  di<ItemService>().add(item);
+                  context.go(Routes.home);
                 }
               },
-              child: const Text('Сохранить (go)'),
+              child: const Text('Сохранить'),
             ),
           ],
         ),

@@ -1,6 +1,8 @@
 // lib/models/item_row.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../navigation/routes.dart';
+import 'package:go_router/go_router.dart';
 
 import 'item.dart';
 import 'category_icons.dart'; // тут лежат kCategories, kCategoryIconUrl и categoryIcon()
@@ -55,7 +57,7 @@ class ItemRow extends StatelessWidget {
           IconButton(
             tooltip: 'Детали',
             icon: const Icon(Icons.info_outline),
-            onPressed: () => context.push('/details/${item.id}'),
+            onPressed: () => context.push(Routes.details(item.id)),
           ),
           IconButton(
             tooltip: 'Удалить',
