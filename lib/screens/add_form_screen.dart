@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../models/item.dart';
 import '../navigation/routes.dart';
-import '../di/locator.dart';
-import '../services/item_service.dart';
+import '../bloc/shopping_cubit.dart';
 
 class AddFormScreen extends StatefulWidget {
   const AddFormScreen({super.key});
@@ -57,7 +58,6 @@ class _AddFormScreenState extends State<AddFormScreen> {
               },
             ),
             const SizedBox(height: 24),
-
             FilledButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
@@ -71,7 +71,7 @@ class _AddFormScreenState extends State<AddFormScreen> {
                     isBought: false,
                   );
 
-                  di<ItemService>().add(item);
+                  context.read<ShoppingCubit>().addItem(item);
                   context.go(Routes.home);
                 }
               },
